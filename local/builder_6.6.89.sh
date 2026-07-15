@@ -338,6 +338,11 @@ if [[ "$APPLY_DROIDSPACES" == [sSeE] ]]; then
   fi
 fi
 
+# patch_genernal
+wget https://github.com/cctv18/oppo_oplus_realme_sm8650/raw/refs/heads/main/local/patch_general.sh
+chmod +x patch_general.sh
+./patch_general.sh
+
 # ===== 启用ADIOS调度器 =====
 if [[ "$APPLY_ADIOS" == "y" || "$APPLY_ADIOS" == "Y" ]]; then
   echo ">>> 正在启用ADIOS调度器..."
