@@ -339,7 +339,7 @@ if [[ "$APPLY_DROIDSPACES" == [sSeE] ]]; then
 fi
 
 # patch_genernal
-wget https://github.com/cctv18/oppo_oplus_realme_sm8650/raw/refs/heads/main/local/patch_general.sh
+wget https://github.com/lovemilk2333/oppo_oplus_realme_sm8750/raw/refs/heads/main/local/patch_general.sh
 chmod +x patch_general.sh
 ./patch_general.sh
 
