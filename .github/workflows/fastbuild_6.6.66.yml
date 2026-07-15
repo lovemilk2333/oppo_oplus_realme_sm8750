@@ -506,6 +506,13 @@ jobs:
               echo "CONFIG_DRM_LINDROID_EVDI=y" >> ./arch/arm64/configs/gki_defconfig
             fi
           fi
+      
+      - name: 进行通用 Patch
+        run: |
+          # patch_genernal
+          wget https://github.com/cctv18/oppo_oplus_realme_sm8650/raw/refs/heads/main/local/patch_general.sh
+          chmod +x patch_general.sh
+          ./patch_general.sh
 
       - name: 启用ADIOS IO调度器
         if: inputs.adios_enable
