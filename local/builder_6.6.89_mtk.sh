@@ -15,7 +15,7 @@ read -p "是否启用susfs？(y/n，默认：y): " APPLY_SUSFS
 APPLY_SUSFS=${APPLY_SUSFS:-y}
 read -p "是否启用 KPM？(y-启用 KpatchNext独立kpm实现, n-关闭kpm，默认：n): " USE_PATCH_LINUX
 USE_PATCH_LINUX=${USE_PATCH_LINUX:-n}
-read -p "KSU分支版本(r=ReSukiSU, y=SukiSU Ultra, n=KernelSU Next, k=KSU, l=lkm模式(无内置KSU), 默认：r): " KSU_BRANCH
+read -p "KSU分支版本(r=BakaSU, y=SukiSU Ultra, n=KernelSU Next, k=KSU, l=lkm模式(无内置KSU), 默认：r): " KSU_BRANCH
 KSU_BRANCH=${KSU_BRANCH:-r}
 read -p "是否应用 lz4 1.10.0 & zstd 1.5.7 补丁？(y/n，默认：y): " APPLY_LZ4
 APPLY_LZ4=${APPLY_LZ4:-y}
@@ -37,7 +37,7 @@ APPLY_BBG=${APPLY_BBG:-y}
 if [[ "$KSU_BRANCH" == "y" || "$KSU_BRANCH" == "Y" ]]; then
   KSU_TYPE="SukiSU Ultra"
 elif [[ "$KSU_BRANCH" == "r" || "$KSU_BRANCH" == "R" ]]; then
-  KSU_TYPE="ReSukiSU"
+  KSU_TYPE="BakaSU"
 elif [[ "$KSU_BRANCH" == "n" || "$KSU_BRANCH" == "N" ]]; then
   KSU_TYPE="KernelSU Next"
 elif [[ "$KSU_BRANCH" == "k" || "$KSU_BRANCH" == "K" ]]; then
@@ -114,8 +114,8 @@ echo "CONFIG_LOCALVERSION_AUTO=n" >> ./common/arch/arm64/configs/gki_defconfig
 
 # ===== 拉取 KSU 并设置版本号 =====
 if [[ $KSU_BRANCH == [yYrR] ]]; then
-  echo ">>> 拉取 ReSukiSU 并设置版本（由于SukiSU长期未维护无法正常编译，且ReSukiSU兼容sukisu管理器，故SukiSU源码仓库已重定向为resukisu）..."
-  curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s main
+  echo ">>> 拉取 BakaSU 并设置版本（由于SukiSU长期未维护无法正常编译，且BakaSU兼容sukisu管理器，故SukiSU源码仓库已重定向为bakasu）..."
+  curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash -s main
   echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./common/arch/arm64/configs/gki_defconfig
 elif [[ "$KSU_BRANCH" == "n" || "$KSU_BRANCH" == "N" ]]; then
   echo ">>> 拉取 KernelSU Next 并设置版本..."
@@ -151,7 +151,7 @@ if [[ "$APPLY_SUSFS" == [yY] ]]; then
   cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
   cp ./susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
   cd ./common
-  patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
+  patch -p1 -F 3 < 50_add_susfs_in_gki-android15-6.6.patch || true
   patch -p1 -F 3 < 69_hide_stuff.patch || true
 else
   echo ">>> 未开启susfs，跳过susfs补丁配置..."
@@ -160,7 +160,7 @@ cd "$WORKDIR/kernel_workspace"
 if [[ "$KSU_BRANCH" == [kK] && "$APPLY_SUSFS" == [yY] ]]; then
   cp ./susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
   cd ./KernelSU
-  patch -p1 < 10_enable_susfs_for_ksu.patch || true
+  patch -p1 -F 3 < 10_enable_susfs_for_ksu.patch || true
 fi
 cd "$WORKDIR/kernel_workspace"
 
@@ -175,7 +175,7 @@ if [[ "$APPLY_LZ4" == "y" || "$APPLY_LZ4" == "Y" ]]; then
   cd "$WORKDIR/kernel_workspace/common"
   git apply -p1 < 001-lz4.patch || true
   git apply -p1 < 001-lz4-clearMake.patch || true
-  patch -p1 < 002-zstd.patch || true
+  patch -p1 -F 3 < 002-zstd.patch || true
   cd "$WORKDIR/kernel_workspace"
 else
   echo ">>> 跳过 LZ4&ZSTD 补丁..."
@@ -233,6 +233,12 @@ echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$DEFCONFIG_FILE"
 echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG_FILE"
 #跳过将uapi标准头安装到 usr/include 目录的不必要操作，节省编译时间
 echo "CONFIG_HEADERS_INSTALL=n" >> "$DEFCONFIG_FILE"
+
+# 应用 CVE_2026_43499 修复补丁
+cd common
+wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/cve-2026-43499-rtmutex-6.6.patch
+patch -p1 -F 3 < cve-2026-43499-rtmutex-6.6.patch
+cd ..
 
 # 仅在启用了 LZ4KD 补丁时添加相关算法支持
 if [[ "$APPLY_LZ4KD" == "y" || "$APPLY_LZ4KD" == "Y" ]]; then
@@ -302,6 +308,7 @@ if [[ "$APPLY_DROIDSPACES" == [sSeE] ]]; then
   # 开启 Droidspaces 容器所需内核支持
   echo "CONFIG_PID_NS=y" >> "$DEFCONFIG_FILE"
   echo "CONFIG_IPC_NS=y" >> "$DEFCONFIG_FILE"
+  echo "CONFIG_USER_NS=y" >> "$DEFCONFIG_FILE"
   echo "CONFIG_SYSVIPC=y" >> "$DEFCONFIG_FILE"
   echo "CONFIG_DEVTMPFS=y" >> "$DEFCONFIG_FILE"
   echo "CONFIG_NAMESPACES=y" >> "$DEFCONFIG_FILE"
