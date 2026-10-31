@@ -1,0 +1,3 @@
+# 同步上游时保留本 fork 已有的 workflow，不采用上游版本。
+# 新文件仍会从上游加入。驱动定义在已提交的 .gitconfig 中。
+.github/workflows/** merge=keep-ours

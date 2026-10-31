@@ -1,0 +1,9 @@
+# 随仓库提交。GitHub 网页 Sync fork / 合并 PR 会读取已提交的 .gitconfig。
+# pull.ff=false 避免快进，否则合并驱动不会生效。
+[pull]
+	ff = false
+[merge]
+	ff = false
+[merge "keep-ours"]
+	name = keep our version when syncing upstream
+	driver = sh .github/merge-keep-ours.sh %O %A %B
