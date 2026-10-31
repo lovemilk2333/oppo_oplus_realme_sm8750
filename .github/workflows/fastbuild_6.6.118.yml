@@ -383,11 +383,7 @@ jobs:
           sed -i 's/check_defconfig//' ./common/build.config.gki
           #跳过将uapi标准头安装到 usr/include 目录的不必要操作，节省编译时间
           echo "CONFIG_HEADERS_INSTALL=n" >> ./common/arch/arm64/configs/gki_defconfig
-          # 应用 CVE_2026_43499 修复补丁
-          cd common
-          wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/other_patch/cve-2026-43499-rtmutex-6.6.patch
-          patch -p1 -F 3 < cve-2026-43499-rtmutex-6.6.patch
-          
+
       - name: 启用网络功能增强优化配置
         if: inputs.better_net
         run: |
@@ -511,6 +507,13 @@ jobs:
               echo "CONFIG_DRM_LINDROID_EVDI=y" >> ./arch/arm64/configs/gki_defconfig
             fi
           fi
+
+      - name: 进行通用 Patch
+        run: |
+          cd kernel_workspace/common
+          wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/local/patch_general.sh
+          chmod +x patch_general.sh
+          ./patch_general.sh
 
       - name: 启用ADIOS IO调度器
         if: inputs.adios_enable

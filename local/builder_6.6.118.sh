@@ -232,11 +232,6 @@ echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG_FILE"
 #跳过将uapi标准头安装到 usr/include 目录的不必要操作，节省编译时间
 echo "CONFIG_HEADERS_INSTALL=n" >> "$DEFCONFIG_FILE"
 
-# 应用 CVE_2026_43499 修复补丁
-cd common
-wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/cve-2026-43499-rtmutex-6.6.patch
-patch -p1 -F 3 < cve-2026-43499-rtmutex-6.6.patch
-cd ..
 
 # 仅在启用了 LZ4KD 补丁时添加相关算法支持
 if [[ "$APPLY_LZ4KD" == "y" || "$APPLY_LZ4KD" == "Y" ]]; then
@@ -344,6 +339,13 @@ if [[ "$APPLY_DROIDSPACES" == [sSeE] ]]; then
     cd ..
   fi
 fi
+
+# patch_genernal
+cd common
+wget https://github.com/lovemilk2333/oppo_oplus_realme_sm8750/raw/refs/heads/main/local/patch_general.sh
+chmod +x patch_general.sh
+./patch_general.sh
+cd ..
 
 # ===== 启用ADIOS调度器 =====
 if [[ "$APPLY_ADIOS" == "y" || "$APPLY_ADIOS" == "Y" ]]; then
